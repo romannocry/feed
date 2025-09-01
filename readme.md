@@ -1,3 +1,6 @@
+Generator.py
+This function is an add-on to the email function
+
 Generator function's goal is to take a json payload and generate a html table widget that will be embedded in emails:
 
 Default urls:
