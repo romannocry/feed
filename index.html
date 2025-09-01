@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Processing Your Action...</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 2rem 2.5rem;
+            text-align: center;
+            max-width: 400px;
+        }
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+            margin: 1.5rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+        .success {
+            color: #27ae60;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn {
+            margin-top: 1.5rem;
+            padding: 0.7rem 1.5rem;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #217dbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading">
+            <div class="loader"></div>
+            <h2>Processing your action...</h2>
+            <p>Please wait while we complete your request.</p>
+        </div>
+        <div id="success" class="hidden">
+            <div class="success">✅</div>
+            <h2>Success!</h2>
+            <p>Your action was processed successfully.</p>
+            <button class="btn" onclick="window.close()">Close this page</button>
+        </div>
+        <div id="error" class="hidden">
+            <h2>Something went wrong</h2>
+            <p>We couldn't process your request. Please try again later.</p>
+        </div>
+    </div>
+    <script>
+        // Helper to get base64 payload from URL (after last slash or as ?payload=)
+        function getBase64Payload() {
+            const url = new URL(window.location.href);
+            // Try ?payload= param
+            if (url.searchParams.has('payload')) {
+                return url.searchParams.get('payload');
+            }
+            // Try last path segment
+            const parts = url.pathname.split('/');
+            return parts[parts.length - 1] || parts[parts.length - 2];
+        }
+
+        function decodeBase64Payload(b64) {
+            // Add padding if needed
+            while (b64.length % 4 !== 0) b64 += '=';
+            try {
+                const decoded = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+                return JSON.parse(decoded);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function postPayload(payload, apiUrl) {
+            // Simulate API call with a dummy endpoint and delay
+            // Replace with: fetch(apiUrl, {method: "POST", body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'}})
+            await new Promise(res => setTimeout(res, 1500)); // Simulate network delay
+            // Simulate success
+            console.log(payload)
+            return { status: "success" };
+        }
+
+        async function main() {
+            const loadingDiv = document.getElementById('loading');
+            const successDiv = document.getElementById('success');
+            const errorDiv = document.getElementById('error');
+
+            const b64 = getBase64Payload();
+            const payload = decodeBase64Payload(b64);
+
+            if (!payload) {
+                loadingDiv.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            let apiUrl = "https://dummy.api/endpoint";
+            if (payload.triggerOnSuccess && payload.triggerOnSuccess.api) {
+                apiUrl = payload.triggerOnSuccess.api;
+            }
+
+            try {
+                await postPayload(payload, apiUrl);
+                loadingDiv.classList.add('hidden');
+                successDiv.classList.remove('hidden');
+
+                // Redirect if needed
+                if (payload.redirect) {
+                    setTimeout(() => {
+                        window.location.href = payload.redirect;
+                    }, 1800);
+                }
+            } catch (e) {
+                loadingDiv.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                // Still redirect if redirect is set, even on error
+                if (payload && payload.redirect) {
+                    setTimeout(() => {
+                        window.location.href = payload.redirect;
+                    }, 1800);
+                }
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
